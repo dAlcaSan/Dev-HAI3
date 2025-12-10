@@ -2,6 +2,13 @@
 
 # HAI3 - AI-Optimized UI Development Kit for Modern SaaS Applications
 
+
+[![Developed by](./badgeHN.svg)](https://www.hai3.org/tavffm/badgeHN.svg)
+
+![Badge](./.github/badgeHN.svg)
+
+
+
 **HAI3** is a **UI development kit** for modern SaaS applications - heavily optimized for **AI-driven UI generation** with minimal human assistance.
 
 It provides a structured, multi-layered framework that enables **AI systems and humans to collaborate** on building, evolving, and refining complex user interfaces - from drafts and mockups to production-ready screens.
