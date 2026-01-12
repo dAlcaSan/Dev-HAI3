@@ -231,7 +231,31 @@ export async function generateProject(
 
   // 5. Generate dynamic files (need project-specific values)
 
-  // 5.1 hai3.config.json (marker file for project detection)
+  // 5.1 App.tsx (conditionally include StudioOverlay based on studio flag)
+  // Read the source App.tsx and modify it if studio is false
+  const appTsxPath = path.join(templatesDir, 'src/app/App.tsx');
+  let appTsxContent = await fs.readFile(appTsxPath, 'utf-8');
+
+  if (!studio) {
+    // Remove StudioOverlay-related lines when studio is not included
+    appTsxContent = appTsxContent
+      // Remove the StudioOverlay documentation section from the comment
+      .replace(/\n \* StudioOverlay \(dev mode only\):[\s\S]*? \* - API mode toggle \(services register their own mocks\)\n/m, '\n')
+      // Remove the StudioOverlay import
+      .replace(/import { StudioOverlay } from '@hai3\/studio';\n/g, '')
+      // Remove the fragment wrapper and StudioOverlay component
+      .replace(
+        /return \(\s*<>\s*<Layout>\s*<AppRouter \/>\s*<\/Layout>\s*<StudioOverlay \/>\s*<\/>\s*\);/s,
+        'return (\n    <Layout>\n      <AppRouter />\n    </Layout>\n  );'
+      );
+  }
+
+  files.push({
+    path: 'src/app/App.tsx',
+    content: appTsxContent,
+  });
+
+  // 5.2 hai3.config.json (marker file for project detection)
   const config: Hai3Config = {
     hai3: true,
     layer,
@@ -251,19 +275,20 @@ export async function generateProject(
     '@hai3/api': 'alpha',
     '@hai3/i18n': 'alpha',
     '@hai3/state': 'alpha',
-    '@hookform/resolvers': '3.9.1',
+    '@hookform/resolvers': '5.2.2',
     '@iconify/react': '5.0.2',
     '@reduxjs/toolkit': '2.2.1',
     'date-fns': '4.1.0',
-    'input-otp': '1.4.1',
+    'input-otp': '1.4.2',
     lodash: '4.17.21',
     'lucide-react': '0.344.0',
     react: '18.3.1',
-    'react-day-picker': '9.4.3',
+    'react-day-picker': '9.12.0',
     'react-dom': '18.3.1',
-    'react-hook-form': '7.54.2',
+    'react-hook-form': '7.68.0',
+    'react-redux': '9.1.2',
     'tailwindcss-animate': '1.0.7',
-    zod: '3.24.1',
+    zod: '4.0.0',
   };
 
   const devDependencies: Record<string, string> = {
