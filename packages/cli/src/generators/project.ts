@@ -231,31 +231,7 @@ export async function generateProject(
 
   // 5. Generate dynamic files (need project-specific values)
 
-  // 5.1 App.tsx (conditionally include StudioOverlay based on studio flag)
-  // Read the source App.tsx and modify it if studio is false
-  const appTsxPath = path.join(templatesDir, 'src/app/App.tsx');
-  let appTsxContent = await fs.readFile(appTsxPath, 'utf-8');
-
-  if (!studio) {
-    // Remove StudioOverlay-related lines when studio is not included
-    appTsxContent = appTsxContent
-      // Remove the StudioOverlay documentation section from the comment
-      .replace(/\n \* StudioOverlay \(dev mode only\):[\s\S]*? \* - API mode toggle \(services register their own mocks\)\n/m, '\n')
-      // Remove the StudioOverlay import
-      .replace(/import { StudioOverlay } from '@hai3\/studio';\n/g, '')
-      // Remove the fragment wrapper and StudioOverlay component
-      .replace(
-        /return \(\s*<>\s*<Layout>\s*<AppRouter \/>\s*<\/Layout>\s*<StudioOverlay \/>\s*<\/>\s*\);/s,
-        'return (\n    <Layout>\n      <AppRouter />\n    </Layout>\n  );'
-      );
-  }
-
-  files.push({
-    path: 'src/app/App.tsx',
-    content: appTsxContent,
-  });
-
-  // 5.2 hai3.config.json (marker file for project detection)
+  // 5.1 hai3.config.json (marker file for project detection)
   const config: Hai3Config = {
     hai3: true,
     layer,
