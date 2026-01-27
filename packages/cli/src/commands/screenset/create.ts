@@ -4,7 +4,7 @@ import type { ScreensetCategory } from '../../core/types.js';
 import { validationOk, validationError } from '../../core/types.js';
 import { generateScreensetFromTemplate } from '../../generators/screensetFromTemplate.js';
 import { writeGeneratedFiles } from '../../utils/fs.js';
-import { getScreensetsDir, screensetExists } from '../../utils/project.js';
+import { getScreensetsDir, screensetExists, loadConfig } from '../../utils/project.js';
 import { isCamelCase, isReservedScreensetName } from '../../utils/validation.js';
 import { runProjectValidation, skipValidationOption } from '../../utils/projectValidation.js';
 
@@ -89,6 +89,17 @@ export const screensetCreateCommand: CommandDefinition<
     const { logger, projectRoot } = ctx;
     const screensetId = args.name;
     const category = args.category ?? 'drafts';
+
+    // Check if UIKit is configured - screensets require a UI kit
+    const config = await loadConfig(projectRoot!);
+    if (!config?.uikit || config.uikit === 'none') {
+      throw new Error(
+        'Cannot create screenset: No UI kit configured.\n' +
+        'Screensets require UI components (Button, Card, etc.) from a UI kit.\n' +
+        'Please install a UI kit first, then update hai3.config.json with your uikit identifier.\n' +
+        'Example: { "hai3": true, "layer": "app", "uikit": "@hai3/uikit" }'
+      );
+    }
 
     // Check if screenset already exists
     if (await screensetExists(projectRoot!, screensetId)) {

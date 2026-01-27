@@ -11,7 +11,7 @@ import {
 } from '../../generators/transform.js';
 import { toPascalCase } from '../../generators/utils.js';
 import { copyDirectoryWithTransform } from '../../utils/fs.js';
-import { getScreensetsDir, screensetExists } from '../../utils/project.js';
+import { getScreensetsDir, screensetExists, loadConfig } from '../../utils/project.js';
 import { isCamelCase, isReservedScreensetName } from '../../utils/validation.js';
 
 /**
@@ -112,6 +112,17 @@ export const screensetCopyCommand: CommandDefinition<
     const { source, target } = args;
     // Default category to 'drafts' for copies
     const category: ScreensetCategory = args.category ?? 'drafts';
+
+    // Check if UIKit is configured - screensets require a UI kit
+    const config = await loadConfig(projectRoot!);
+    if (!config?.uikit || config.uikit === 'none') {
+      throw new Error(
+        'Cannot copy screenset: No UI kit configured.\n' +
+        'Screensets require UI components (Button, Card, etc.) from a UI kit.\n' +
+        'Please install a UI kit first, then update hai3.config.json with your uikit identifier.\n' +
+        'Example: { "hai3": true, "layer": "app", "uikit": "@hai3/uikit" }'
+      );
+    }
 
     const screensetsDir = getScreensetsDir(projectRoot!);
     const sourcePath = path.join(screensetsDir, source);

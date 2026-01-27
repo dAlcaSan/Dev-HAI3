@@ -110,6 +110,18 @@ export async function generateProject(
       continue;
     }
 
+    // Skip UIKit-dependent config files when uikit === 'none'
+    // These files have CSS variable references that only work with @hai3/uikit
+    if (uikit === 'none') {
+      const uikitDependentFiles = [
+        'tailwind.config.ts',
+        'postcss.config.ts',
+      ];
+      if (uikitDependentFiles.includes(file)) {
+        continue;
+      }
+    }
+
     const filePath = path.join(templatesDir, file);
     if (await fs.pathExists(filePath)) {
       const content = await fs.readFile(filePath, 'utf-8');
@@ -255,7 +267,11 @@ export async function generateProject(
   // 3.3 Copy scripts directory
   const scriptsDir = path.join(templatesDir, 'scripts');
   if (await fs.pathExists(scriptsDir)) {
-    const scriptFiles = await readDirRecursive(scriptsDir, 'scripts');
+    let scriptFiles = await readDirRecursive(scriptsDir, 'scripts');
+    // Filter out generate-colors.ts when uikit === 'none' (not needed without @hai3/uikit)
+    if (uikit === 'none') {
+      scriptFiles = scriptFiles.filter(f => !f.path.includes('generate-colors'));
+    }
     files.push(...scriptFiles);
   }
 
@@ -298,6 +314,7 @@ export async function generateProject(
   const config: Hai3Config = {
     hai3: true,
     layer,
+    uikit,
   };
   files.push({
     path: 'hai3.config.json',
@@ -370,13 +387,13 @@ export async function generateProject(
     packageManager: 'npm@11.7.0',
     workspaces: ['eslint-plugin-local'],
     scripts: {
-      dev: 'npm run generate:colors && vite',
+      dev: uikit === 'hai3' ? 'npm run generate:colors && vite' : 'vite',
       'check:mcp': 'npx tsx scripts/check-mcp.ts',
-      build: 'npm run generate:colors && vite build',
+      build: uikit === 'hai3' ? 'npm run generate:colors && vite build' : 'vite build',
       preview: 'vite preview',
       lint: 'npm run build --workspace=eslint-plugin-local && eslint . --max-warnings 0',
-      'type-check': 'npm run generate:colors && tsc --noEmit',
-      'generate:colors': 'npx tsx scripts/generate-colors.ts',
+      'type-check': uikit === 'hai3' ? 'npm run generate:colors && tsc --noEmit' : 'tsc --noEmit',
+      ...(uikit === 'hai3' && { 'generate:colors': 'npx tsx scripts/generate-colors.ts' }),
       'arch:check': 'npx tsx scripts/test-architecture.ts',
       'arch:deps':
         'npx dependency-cruiser src/ --config .dependency-cruiser.cjs --output-type err-long',
